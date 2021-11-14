@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css" />
+    <title>Gallery</title>
+</head>
+<body>
+    <h1>Галерея</h1>
+    <div id="auth-container"></div>   
+    
+    <div id="gallery-container"></div>
+
+    <div class="pagination-block" page-number="1">
+        <input type="button" value="<<" id="prevPageButton" />
+        <b id="currentPageNumber">1</b>
+        <input type="button" value=">>" id="nextPageButton" />
+    </div>
+
+    <form class="add-image-form">
+        <cite>Добавить изображение</cite>
+        <label><span>Название: </span><input type="text" name="title"/></label>
+        <label><span>Описание: </span><input type="text" name="description"/></label>
+        <label><span>Место:    </span><input type="text" name="place"      /></label>
+        <label><span>Файл :    </span><input type="file" name="picture"    /></label>
+        <button>Загрузить</button>
+    </form>
+    <script src="/js/script.js"></script>
+</body>
+</html>

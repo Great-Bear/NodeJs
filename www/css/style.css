@@ -1,0 +1,93 @@
+body {
+    background-color: moccasin;
+    margin: 0;
+    padding: 0;
+}
+.add-image-form {
+    border: 2px solid gray;
+    display: inline-block;
+    padding: 5px;
+}
+.add-image-form cite {
+    font-variant: small-caps;
+    font-weight: 700;
+}
+.add-image-form label {
+    display: block;
+}
+.add-image-form label span {
+    display: inline-block;
+    width: 100px;
+}
+.picture-item {
+    border: 2px solid #777;
+    box-shadow: 5px 5px 3px #999;
+    display: inline-block;
+    margin: 10px 20px;
+    padding: 7px;
+    position: relative;
+    vertical-align: top;
+    width: 350px;
+}
+.picture-item .vote {
+    position: absolute;
+    left: 10px;
+    top: 50px;
+}
+.picture-item .vote .vote-total {
+    text-align: center;
+}
+.picture-item .vote .vote-like, .picture-item .vote .vote-dislike {
+    cursor: pointer;
+    margin-left: 0.5ex;
+}
+.picture-item img {
+    float: left;
+    margin-left: 30px;
+    max-width: 150px;
+}
+.picture-item p {
+    display: inline-block;
+}
+.tool-buttons {
+    display: block;
+    clear: both;
+    text-align: right;
+}
+.tool-buttons span {
+    background-image: url(../images/btns.png) ;
+    background-size: 300%;
+    cursor: pointer;
+    display: inline-block;
+    height: 30px;
+    margin: 3px;
+    opacity: .5;
+    width: 30px;
+}
+.tool-buttons span:hover {
+    opacity: 1;
+}
+.tb-delete {
+    background-position: -50% 0;
+}
+.tb-download {
+    background-position: -50% 50%;
+}
+.tb-edit {
+    background-position: 0 0;
+}
+.tb-recover {
+    background-position: 0 50%;
+}
+
+.user-block {
+    background-color: darkkhaki;
+    padding: 7px 10px;
+}
+
+.user-block-auth {
+    border: 2px solid olive;
+}
+.user-block-auth select {
+    margin-left: 10vw;
+}

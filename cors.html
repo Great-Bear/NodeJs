@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS</title>
+</head>
+<body>
+    <h1>CORS / CORP</h1>
+    <p>
+        Cross-Origin Resource Sharing - междоменный обмен ресурсами.
+        Origin (источник) - домен (доменое имя), с которого производится запрос.
+        Cross-Origin - ситуация, когда домен, отсылающий запрос,
+         и запрашиваемый домен разные. Ситуация возникает когда
+         а) API общедоступный, например, служба новостей, погоды, курсов валют и т.п.
+         б) Система едина, но распределенная. Например, запрос к API производится
+            с мобильного устройства
+        
+    </p>
+    <p>
+        Cross-Origin Resource Policy (CORP) - принцип, согласно которому только
+        внутридоменные запросы проходят без дополнительных ограничений.
+    </p>
+    <p>
+        Для проверки и настройки CORS / CORP нужно проводить запросы из разных доменов.
+        Простейший способ - открыть страницу как отдельный файл, а не через localhost
+    </p>
+    <p>
+        Без дополнительных действий кросс-доменный запрос блокируется браузером,
+        если в ответе сервера нет заголовка 'Access-Control-Allow-Origin'
+    </p>
+    <p>
+        Для запросов, кроме GET и POST, в кросс-доменном варианте предварительно
+        посылается запрос OPTIONS. Сервер должен подтвердить тот факт, что он 
+        вообще допускает запросы другого типа. Если сервер не отвечает на этот запрос
+        или отвечает не должным образом, то запрос, например PUT, даже не будет
+        отправляться клиентом.
+    </p>
+    <p>
+        <input type="button" onclick="getClick()"    value="GET"   />
+        <input type="button" onclick="postClick()"   value="POST"  />
+        <input type="button" onclick="putClick()"    value="PUT"   />
+        <input type="button" onclick="deleteClick()" value="DELETE"/>
+    </p>
+    <p id=out></p>
+
+    <script>
+        function getClick() {
+            fetch("http://gallery.step/api/picture")
+            .then(r=>r.text())
+            .then(t => window.out.innerHTML = t)
+        }
+        function postClick() {
+            fetch("http://gallery.step/api/picture", {
+                method:"post"
+            })
+            .then(r=>r.text())
+            .then(t => window.out.innerHTML = t)
+        }
+        function putClick() {
+            fetch("http://gallery.step/api/picture", {
+                method:"put",
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(r=>r.text())
+            .then(t => window.out.innerHTML = t)
+        }
+        function deleteClick() {
+            fetch("http://gallery.step/api/picture", {
+                method:"delete",
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(r=>r.text())
+            .then(t => window.out.innerHTML = t)
+        }
+    </script>
+</body>
+</html>
