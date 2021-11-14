@@ -146,30 +146,47 @@ function doGet( request, response ) {
                 const totalCnt = results[0].cnt ;  // кол-во записей
                 // этап 2: определяем лимиты и запрашиваем данные
                 const perPage = 4 ;            
-                const pageNumber = request.params.query.page ?? 1 ;
+                const pageNumber = (request.params.query.page !== null && request.params.query.page !== undefined) ? request.params.query.page : 1;
                 const lastPage = Math.ceil( totalCnt / perPage ) ;  // (11,4) -> 3, (12,4) -> 3, (13,4) -> 4
 
                 var limits = ` LIMIT ${perPage*(pageNumber-1)}, ${perPage}`;   // Pagination
                 
                 // const picQuery = "SELECT p.*, CAST(p.id AS CHAR) id_str FROM pictures p "  + conditions + limits;
                 const picQuery = 
-                `select 
-                    p.*, 
-                    CAST(p.id AS CHAR) id_str,
-                    coalesce( v.rating, 0 ) rating,
-                    coalesce( v.votes, 0 )  votes
-                from 
-                    pictures p 
-                    left join 
-                        (select 
-                            picture_id,
-                            sum(vote) rating,
-                            count(id) votes 
-                        from 
-                            votes 
-                        group by picture_id) v
-                    on p.id = v.picture_id `  + conditions + limits;
-                    
+                `SELECT 
+                p.*, 
+                CAST(p.id AS CHAR) id_str, 
+                coalesce(v.rating, 0) rating, 
+                coalesce(v.votes, 0) votes,
+                coalesce(c.comments, 0) comments,
+                commentText AS lastComment,
+                moment,
+                q.AuthorComment
+            
+            FROM 
+            pictures p 
+                LEFT JOIN 
+                    (SELECT 
+                        picture_id, 
+                        sum(vote) rating, 
+                        count(id) votes 
+                    FROM 
+                        votes 
+                    GROUP BY picture_id) v 
+                on p.id = v.picture_id 
+                 LEFT JOIN
+                    (SELECT 
+                        picture_id,
+                        count(id) comments,
+                        MAX(moment) as MaxMomemt
+                        
+                    FROM
+                        comments
+                    GROUP BY picture_id ) c
+                on p.id = c.picture_id  LEFT JOIN 
+                ( SELECT commentText, moment, users_id AS AuthorComment FROM comments  ) 
+                q on c.MaxMomemt = q.moment  `  + conditions + limits;
+                   console.log(picQuery);
                 request.services.dbPool.query( 
                     picQuery,
                     queryParams,
@@ -178,7 +195,8 @@ function doGet( request, response ) {
                         console.log( err ) ;
                         response.errorHandlers.send500() ;
                     } else {
-                        // console.log(results);
+                         console.log(results);
+                         console.log(queryParams + '________________');
                         response.setHeader( 'Content-Type', 'application/json' ) ;
                         response.end( JSON.stringify( {
                             meta: {
@@ -187,8 +205,9 @@ function doGet( request, response ) {
                                 'currentPage': pageNumber,
                                 'lastPage':    lastPage
                             },
-                            data: results
-                        } ) ) ;
+                            data: results                        
+                        }  ) ) ;
+                       
                     }
                 } ) ;
             }
@@ -284,7 +303,7 @@ function moveUploadedFile( file ) {
         // TODO: trim filename to 64 symbols
         savedName = `(${counter++})_${file.name}` ;
     } while( fs.existsSync( UPLOAD_PATH + savedName ) ) ;
-    fs.rename( file.path, UPLOAD_PATH + savedName, 
+    fs.copyFileSync( file.path, UPLOAD_PATH + savedName, 
         err => { if( err ) console.log( err ) ; } ) ;
     return savedName ;
 }

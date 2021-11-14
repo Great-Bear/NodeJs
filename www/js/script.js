@@ -69,12 +69,17 @@ document.addEventListener("DOMContentLoaded", ()=>{
                 fetch("/templates/picture.tpl").then(r=>r.text()).then(tpl=>{
                     var html = "";
                     for(let p of j.data){
+                        if(p.lastComment == null){
+                            p.lastComment = "Ещё нет коментариев";
+                        }
                         html += tpl.replace("{{id}}",p.id_str)
                                 .replace("{{title}}",p.title)
                                 .replace("{{description}}",p.description)
                                 .replace("{{place}}",p.place)
                                 .replace("{{filename}}",p.filename)
-                                .replace("{{rating}}",p.rating);
+                                .replace("{{rating}}",p.rating)
+                                .replace("{{countComments}}",p.comments)
+                                .replace("{{lastComments}}",p.lastComment);
                     }
                     cont.innerHTML = html;
                     window.galleryWindow.state.pageNumber = j.meta.currentPage ;
@@ -295,7 +300,13 @@ function voteHandler(e){
             "picture_id": pictureId,
             "vote": vote
         })
-    }).then(r=>r.text()).then(console.log);
+    }).then(r=>r.text()).then( (res) => { 
+        if(JSON.parse(res).result){
+          let voteTotal = e.target.closest("[picId]").querySelector('.vote-total');
+           voteTotal.innerHTML =  parseInt( voteTotal.innerHTML) + vote;
+        }     
+        console.log(res);
+     });
 }
 function setVotesHadlers(){
     for(let v of document.querySelectorAll(".vote-like,.vote-dislike")){
@@ -303,4 +314,199 @@ function setVotesHadlers(){
         v.onclick = voteHandler;
     }
 }
+
+function addNewComments(e){
+    const userId = findUserId();
+    const textComment = e.target.closest("[picId]").querySelector('.textCommentField');
+    const pictureId = e.target.closest("[picId]").getAttribute("picId");
+
+    if(userId == null){
+        if(confirm("You are not authorized you comment will be anonymous would you want continue?") == false){
+            textComment.value = '';
+            return;
+        }
+    }
+  
+    if(textComment.value == ''){
+        alert("comments can`t be empty");
+        return;
+    }
+    fetch("/api/comments", {
+        method: "post",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            "users_id": userId,
+            "picture_id": pictureId,
+            "commentText": textComment.value
+        })
+    }).then(r=>r.text()).then( (res) => { 
+        if(!JSON.parse(res).affectedRows){
+            alert("Comment was not saved");
+        }
+        else{
+            textComment.value = '';
+            let countComments = parseInt(e.target.closest("[picId]").querySelector(".countComments").children[0].innerText);
+            e.target.closest("[picId]").querySelector(".countComments").children[0].innerText = ++countComments;
+            showAllComments(e);
+        }
+     });
+}
+
+function setCommentsHandler(){  
+    for(let btn of document.querySelectorAll(".addComments")){
+        btn.onclick = addNewComments;
+    }
+}
+function showCommentsHandler(){  
+    for(let btn of document.querySelectorAll(".ShowComments")){
+        btn.onclick = showAllComments;
+    }
+}
+function showAllComments(e){
+   
+    const pictureId = e.target.closest("[picId]").getAttribute("picId");
+    const userId = findUserId();
+    if(e.target.innerText != "Add comments"){
+        e.target.onclick = hideComments;  
+        e.target.innerText = "Hide comments";
+    }
+    console.log(pictureId)
+    fetch(`/api/comments?idPic=${pictureId}`).then(resp => resp.json()).then( (response) => {
+        let commentsBlock = e.target.closest("[picId]").querySelector('.commentsBlock');
+        commentsBlock.innerText = '';
+        console.log(response);
+        for(let comment of response){
+            if(comment.login == null){
+                comment.login = "Аноним";                
+            }
+            let div = document.createElement('div');
+
+            div.setAttribute('idCom',comment.id);
+            div.classList.add("comment");
+
+            let commentText = document.createElement('span');
+            commentText.innerText = comment.commentText;
+            commentText.className = "commentText";
+
+            div.appendChild(commentText);
+            div.appendChild(document.createElement('br'));
+
+            let dateTime = new Date(comment.moment);
+            let dateAuthor = document.createElement('span');
+            dateAuthor.innerText = `${comment.login}:${dateTime.getFullYear()}/${dateTime.getMonth()}/${dateTime.getDay()}-${dateTime.getHours()}:${dateTime.getMinutes()}`
+            div.appendChild(dateAuthor);
+         
+            if(userId == comment.AuthorComment && userId != null){
+                let btnDelete = document.createElement('button');
+                btnDelete.classList.add("deleteBtn")
+                btnDelete.onclick = deleteComments;
+                btnDelete.innerText = 'Delete';
+
+                let btnEdit = document.createElement("button");
+                btnEdit.classList.add("editBtn");
+                btnEdit.onclick = EditComments;
+                btnEdit.innerText = 'Edit';
+                div.appendChild(btnDelete);
+                div.appendChild(btnEdit);
+            }
+            commentsBlock.appendChild(div);
+        }
+    } );
+}
+
+function EditComments(e){
+   e.target.innerText = 'Save';
+   e.target.onclick = saveChangesComment;
+   let commentTextContainer = e.target.parentNode.querySelector(".commentText");
+   commentTextContainer.setAttribute("contenteditable", true);
+   commentTextContainer.savedText = commentTextContainer.innerText;
+   commentTextContainer.focus();
+
+   let btnCancel = document.createElement("button");
+   btnCancel.innerText = "Reset";
+   btnCancel.className = "ResetBtn"
+   btnCancel.onclick = ResetChanges;
+   e.target.parentNode.appendChild(btnCancel);
+}
+function ResetChanges(e){
+    let parentContainer = e.target.parentNode.querySelector(".commentText");
+    parentContainer.setAttribute("contenteditable", false);
+    parentContainer.innerText = parentContainer.savedText ;
+    let btnEdit = e.target.parentNode.querySelector(".editBtn");
+    btnEdit.innerText = "Edit";
+    btnEdit.onclick = EditComments;
+    e.target.remove();
+}
+
+function saveChangesComment(e){
+    
+    e.target.innerText = "Edit";
+    e.target.onclick = EditComments;
+    let commentContainer = e.target.parentNode.querySelector(".commentText");
+    if(commentContainer.innerText == commentContainer.savedText){
+        alert("Changes comment can`t mush with old");
+        return;
+    }
+    let data = {} ;
+    data.newText = commentContainer.innerText;
+    data.idCom = e.target.closest("[idcom]").getAttribute("idcom");
+
+        fetch('/api/comments',{
+            method: "put",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(r => r.text()).then( (res) => {
+            let resObj = JSON.parse(res);
+            if(! resObj.result){
+                commentContainer.innerText = commentContainer.savedText;
+            }
+            else{
+                alert("Changes was saved");
+            }
+        } );
+    
+
+}
+
+function deleteComments(e){
+
+    if(!confirm("Are you sure?")) return;
+     const div = e.target.closest("div");
+     const comId = div.getAttribute('idCom');
+     const parentBlock = e.target.parentNode.closest("[picId]")
+    fetch("/api/comments",{
+        method: "delete",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: `{"id":"${comId}"}`
+    }).then(r=>r.json()).then(j=>{
+
+        if(typeof j.result == 'undefined' ) alert("Some error");
+        else if (j.result == 1){
+            div.remove();
+            let countComments = parseInt(parentBlock.querySelector(".countComments").children[0].innerText);
+            parentBlock.querySelector(".countComments").children[0].innerText = --countComments;
+            alert("Delete completed!");
+        }
+        else alert("Deleted fail");
+    });
+}
+
+function hideComments(e){
+    e.target.innerText ='Show all comments';
+    e.target.onclick = showAllComments;
+    let commentsBlock = e.target.closest("[picId]").querySelector('.commentsBlock');
+    let firstComment = commentsBlock.childNodes[commentsBlock.children.length - 1].childNodes[0];
+
+    commentsBlock.innerText = firstComment.innerText;
+}
+
+
 document.addEventListener("galleryWindowChange", setVotesHadlers);
+document.addEventListener("galleryWindowChange", setCommentsHandler);
+document.addEventListener("galleryWindowChange", showCommentsHandler);

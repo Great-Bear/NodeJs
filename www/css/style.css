@@ -91,3 +91,27 @@ body {
 .user-block-auth select {
     margin-left: 10vw;
 }
+.picture-item  textarea{
+    width: 96%;
+    margin-right: 10px;
+}
+.comment
+{
+    border: 1px solid black;
+    padding: 5px;
+}
+.deleteBtn
+{
+    position: absolute;
+    right: 10px;
+}
+.editBtn
+{
+    position: absolute;
+    right: 70px;
+}
+.ResetBtn
+{
+    position: absolute;
+    right: 120px;
+}

@@ -13,4 +13,10 @@
         <span class="tb-edit"></span>
         <span class="tb-download"></span>
     </section>
+    <textarea class="textCommentField"></textarea>
+    <button class="addComments" >Add comments</button>
+    <button class="ShowComments" >Show all comments</button>
+    <div><p class="countComments">CountComments: <span>{{countComments}}<span></p></div>
+    <div class="commentsBlock">{{lastComments}}</div>
+
 </div>
