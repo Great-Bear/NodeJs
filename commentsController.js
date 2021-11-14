@@ -64,8 +64,6 @@ function  doDelete( request, response ) {
     .then( deleteComments )
     .then( results => {
         response.setHeader( 'Content-Type', 'application/json' ) ;
-        console.log('__________________');
-        console.log(results);
         response.end( JSON.stringify( { "result": results.affectedRows } ) ) ;
     } )
     .catch( err => { console.log( err ) ; response.errorHandlers.send412( err ) ; } ) ;

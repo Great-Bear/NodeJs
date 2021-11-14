@@ -349,7 +349,9 @@ function addNewComments(e){
             textComment.value = '';
             let countComments = parseInt(e.target.closest("[picId]").querySelector(".countComments").children[0].innerText);
             e.target.closest("[picId]").querySelector(".countComments").children[0].innerText = ++countComments;
-            showAllComments(e);
+            if(e.target.closest("[picId]").querySelector(".ShowComments").innerText != "Show all comments") {
+                showAllComments(e);
+            }         
         }
      });
 }
@@ -372,11 +374,10 @@ function showAllComments(e){
         e.target.onclick = hideComments;  
         e.target.innerText = "Hide comments";
     }
-    console.log(pictureId)
     fetch(`/api/comments?idPic=${pictureId}`).then(resp => resp.json()).then( (response) => {
         let commentsBlock = e.target.closest("[picId]").querySelector('.commentsBlock');
         commentsBlock.innerText = '';
-        console.log(response);
+ 
         for(let comment of response){
             if(comment.login == null){
                 comment.login = "Аноним";                
@@ -465,6 +466,8 @@ function saveChangesComment(e){
                 commentContainer.innerText = commentContainer.savedText;
             }
             else{
+                let btnReset = e.target.closest("[idcom]").querySelector(".ResetBtn");
+                btnReset.remove();
                 alert("Changes was saved");
             }
         } );
